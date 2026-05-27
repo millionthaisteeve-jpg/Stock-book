@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Key, Sparkles, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Send, Sparkles, ShieldCheck, RefreshCw } from 'lucide-react';
 import { Transaction, ChatMessage } from '../types';
 
 interface StockAdvisorChatProps {
