@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 스마트 주식 가계부 & 포트폴리오 분석가 (무설치 버전)</title>
+  <!-- 구글 폰트 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              950: '#020617',
+              900: '#0f172a',
+              800: '#1e293b',
+              700: '#334155',
+              600: '#475569',
+            },
+            cyan: {
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+            },
+            emerald: {
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+            },
+            rose: {
+              400: '#f87171',
+              500: '#ef4444',
+              600: '#dc2626',
+            }
+          },
+          fontFamily: {
+            sans: ['"Inter"', '"Outfit"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- React 및 Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* 스크롤바 커스터마이징 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.1);
+    }
+    .dark ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.3);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(6, 182, 212, 0.5);
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.03) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.03) 0px, transparent 50%);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .dark body {
+      background-color: #020617;
+      color: #f1f5f9;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 1rem;
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dark .glass-card {
+      background: rgba(15, 23, 42, 0.6);
+      border-color: rgba(30, 41, 59, 0.8);
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3);
+    }
+    
+    .glass-card:hover {
+      border-color: rgba(203, 213, 225, 0.8);
+      box-shadow: 0 20px 25px -5px rgba(6, 182, 212, 0.08);
+    }
+
+    .dark .glass-card:hover {
+      border-color: rgba(51, 65, 85, 0.6);
+      box-shadow: 0 25px 50px -12px rgba(6, 182, 212, 0.15);
+    }
+
+    .btn-primary {
+      background: linear-gradient(to right, #06b6d4, #6366f1);
+      color: white;
+      font-weight: 500;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.15);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(to right, #22d3ee, #4f46e5);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.25);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      transform: scale(0.97);
+    }
+
+    .form-input {
+      width: 100%;
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #0f172a;
+      border-radius: 0.75rem;
+      padding: 0.625rem 1rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .dark .form-input {
+      background-color: rgba(3, 7, 18, 0.8);
+      border-color: #1e293b;
+      color: #f8fafc;
+    }
+
+    .form-input:focus {
+      border-color: #06b6d4;
+      box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+    }
+
+    @keyframes textShine {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .text-gradient-shine {
+      background: linear-gradient(-45deg, #06b6d4, #6366f1, #10b981, #06b6d4);
+      background-size: 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textShine 8s ease infinite;
+    }
+
+    .dot-typing {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .dot-typing span {
+      width: 6px;
+      height: 6px;
+      background-color: #06b6d4;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .dot-typing span:nth-child(1) { animation-delay: -0.32s; }
+    .dot-typing span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1.0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fadeIn {
+      animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+  </style>
+</head>
+<body class="font-sans min-h-screen antialiased select-none">
+  <div id="root"></div>
+
+  <!-- React JSX 컴포넌트 렌더링 -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ===================================================
+    // [인라인 아이콘 팩] 깨짐 방지용 정교한 SVG 컴포넌트 사전
+    // ===================================================
+    const Icon = ({ name, className = "w-4 h-4" }) => {
+      const icons = {
+        trendingUp: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        ),
+        trendingDown: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+          </svg>
+        ),
+        plus: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        ),
+        trash: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        ),
+        edit: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        ),
+        dollar: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16v1" />
+          </svg>
+        ),
+        pie: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.003 9.003 0 1020.945 13H11V3.055z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+          </svg>
+        ),
+        list: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        ),
+        file: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        ),
+        check: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        ),
+        send: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        ),
+        key: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m-5 8a3 3 0 11-6 0 3 3 0 016 0zm6.3-7.3a10.103 10.103 0 00-1.8-1.8M15 7.3a9.907 9.907 0 00-2-2M21 3l-6 6m0 0l-1.5-1.5M15 9l-3.5 3.5m0 0L10 11" />
+          </svg>
+        ),
+        sparkles: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.286L13 21l-2.286-6.857L5 12l5.714-2.286L13 3z" />
+          </svg>
+        ),
+        alert: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        ),
+        shield: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        ),
+        refresh: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3" />
+          </svg>
+        ),
+        chart: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+          </svg>
+        ),
+        calendar: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        ),
+        tag: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        ),
+        briefcase: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        ),
+        download: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        ),
+        upload: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+        ),
+        sun: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
+          </svg>
+        ),
+        moon: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        ),
+        settings: (
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className={className}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        ),
+      };
+      
+      return icons[name] || null;
+    };
+
+    // ==========================================
+    // [데모 초기 데이터 정의]
+    // ==========================================
+    const INITIAL_DEMO_TRANSACTIONS = [
+      { id: 'demo-1', ticker: 'APPLE', sector: '테크 / 빅테크', purchaseDate: '2026-05-10', price: 178, quantity: 8, currency: 'USD' },
+      { id: 'demo-2', ticker: '삼성전자', sector: '반도체', purchaseDate: '2026-05-12', price: 71200, quantity: 30, currency: 'KRW' },
+      { id: 'demo-3', ticker: 'SK하이닉스', sector: '반도체', purchaseDate: '2026-05-18', price: 168000, quantity: 15, currency: 'KRW' },
+      { id: 'demo-4', ticker: '현대차', sector: '자동차 / 2차전지', purchaseDate: '2026-05-20', price: 242000, quantity: 10, currency: 'KRW' },
+      { id: 'demo-5', ticker: 'MICROSOFT', sector: '테크 / 빅테크', purchaseDate: '2026-05-22', price: 420, quantity: 5, currency: 'USD' }
+    ];
+
+    const INITIAL_DEMO_PRICES = {
+      'APPLE': 186,
+      '삼성전자': 69800,
+      'SK하이닉스': 182500,
+      '현대차': 255000,
+      'MICROSOFT': 435
+    };
+
+    const RECOMMENDED_SECTORS = [
+      '반도체', '테크 / 빅테크', '바이오 / 헬스케어', '자동차 / 2차전지', '금융 / 은행', '소비재 / 유통', '에너지 / 화학'
+    ];
+
+    const SECTOR_COLORS = [
+      '#22d3ee', '#6366f1', '#34d399', '#f59e0b', '#ec4899', '#a855f7', '#f43f5e'
+    ];
+
+    // ==========================================
+    // 1. StockForm Component (입력 폼)
+    // ==========================================
+    function StockForm({ onAddTransaction }) {
+      const [ticker, setTicker] = useState('');
+      const [sector, setSector] = useState('');
+      const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
+      const [price, setPrice] = useState('');
+      const [quantity, setQuantity] = useState('');
+      const [currency, setCurrency] = useState('KRW');
+      const [errors, setErrors] = useState({});
+
+      const validateForm = () => {
+        const tempErrors = {};
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        if (!ticker.trim()) tempErrors.ticker = '종목명을 입력해주세요.';
+        if (!sector.trim()) tempErrors.sector = '분야/섹터를 지정해주세요.';
+        if (!purchaseDate) tempErrors.purchaseDate = '날짜를 입력해주세요.';
+        else if (purchaseDate > todayStr) tempErrors.purchaseDate = '미래 날짜는 선택 불가합니다.';
+        
+        const parsedPrice = Number(price);
+        if (!price || isNaN(parsedPrice) || parsedPrice <= 0) {
+          tempErrors.price = '0보다 큰 단가를 입력해주세요.';
+        }
+        
+        const parsedQuantity = Number(quantity);
+        if (!quantity || isNaN(parsedQuantity) || parsedQuantity <= 0) {
+          tempErrors.quantity = '0보다 큰 수량을 입력해주세요.';
+        } else if (!Number.isInteger(parsedQuantity)) {
+          tempErrors.quantity = '정수로 입력해주세요.';
+        }
+
+        setErrors(tempErrors);
+        return Object.keys(tempErrors).length === 0;
+      };
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (validateForm()) {
+          onAddTransaction({
+            ticker: ticker.trim().toUpperCase(),
+            sector: sector.trim(),
+            purchaseDate,
+            price: Number(price),
+            quantity: Number(quantity),
+            currency
+          });
+          setTicker('');
+          setPrice('');
+          setQuantity('');
+          setErrors({});
+        }
+      };
+
+      return (
+        <div className="glass-card p-6">
+          <div className="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <Icon name="plus" className="text-cyan-500 dark:text-cyan-400 w-5 h-5" />
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">새 매수 거래 등록</h3>
+            </div>
+            <span className="text-4xs text-slate-400 dark:text-slate-500">화폐 단위 기입 지원</span>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
+                  <Icon name="briefcase" className="w-3.5 h-3.5 text-slate-400" />
+                  종목명 *
+                </label>
+                <input
+                  type="text"
+                  value={ticker}
+                  onChange={(e) => setTicker(e.target.value)}
+                  placeholder="예: 삼성전자, Apple"
+                  className={`form-input text-xs ${errors.ticker ? 'border-rose-500/80 focus:ring-2' : ''}`}
+                />
+                {errors.ticker && <p className="mt-1 text-2xs text-rose-500 font-semibold">{errors.ticker}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
+                  <Icon name="dollar" className="w-3.5 h-3.5 text-slate-400" />
+                  거래 화폐 단위
+                </label>
+                <div className="flex bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-0.5 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setCurrency('KRW')}
+                    className={`flex-1 text-4xs font-bold py-2 rounded-lg transition-all ${
+                      currency === 'KRW' ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white shadow' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                    }`}
+                  >
+                    KRW (₩)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrency('USD')}
+                    className={`flex-1 text-4xs font-bold py-2 rounded-lg transition-all ${
+                      currency === 'USD' ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white shadow' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                    }`}
+                  >
+                    USD ($)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
+                <Icon name="tag" className="w-3.5 h-3.5 text-slate-400" />
+                분야 / 섹터 *
+              </label>
+              <input
+                type="text"
+                value={sector}
+                onChange={(e) => setSector(e.target.value)}
+                placeholder="분야 입력 또는 아래 칩 클릭"
+                className={`form-input text-xs mb-2 ${errors.sector ? 'border-rose-500/80 focus:ring-2' : ''}`}
+              />
+              <div className="flex flex-wrap gap-1">
+                {RECOMMENDED_SECTORS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSector(s)}
+                    className={`text-3xs px-2.5 py-0.5 rounded-full border transition-all ${
+                      sector === s ? 'bg-cyan-500/10 text-cyan-500 border-cyan-550/30' : 'bg-slate-100 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              {errors.sector && <p className="mt-1 text-2xs text-rose-500 font-semibold">{errors.sector}</p>}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
+                <Icon name="calendar" className="w-3.5 h-3.5 text-slate-400" />
+                매수 일자 *
+              </label>
+              <input
+                type="date"
+                max={new Date().toISOString().split('T')[0]}
+                value={purchaseDate}
+                onChange={(e) => setPurchaseDate(e.target.value)}
+                className={`form-input text-xs ${errors.purchaseDate ? 'border-rose-500/80' : ''}`}
+              />
+              {errors.purchaseDate && <p className="mt-1 text-2xs text-rose-500 font-semibold">{errors.purchaseDate}</p>}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
+                  <Icon name="dollar" className="w-3.5 h-3.5 text-slate-400" />
+                  단가 ({currency === 'KRW' ? '₩' : '$'}) *
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder={currency === 'KRW' ? '예: 70000' : '예: 175.5'}
+                  className={`form-input text-xs ${errors.price ? 'border-rose-500/80' : ''}`}
+                />
+                {errors.price && <p className="mt-1 text-2xs text-rose-500 font-semibold">{errors.price}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
+                  <Icon name="plus" className="w-3.5 h-3.5 text-slate-400" />
+                  수량 (주) *
+                </label>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="예: 10"
+                  className={`form-input text-xs ${errors.quantity ? 'border-rose-500/80' : ''}`}
+                />
+                {errors.quantity && <p className="mt-1 text-2xs text-rose-500 font-semibold">{errors.quantity}</p>}
+              </div>
+            </div>
+
+            <button type="submit" className="w-full btn-primary py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 mt-2">
+              <Icon name="plus" className="w-4 h-4" />
+              거래 등록하기
+            </button>
+          </form>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 2. PortfolioTable Component (분석 & 리스트)
+    // ==========================================
+    function PortfolioTable({ transactions, currentPrices, baseCurrency, exchangeRate, onDeleteTransaction, onUpdateCurrentPrice }) {
+      const [activeTab, setActiveTab] = useState('portfolio');
+      const [editingTicker, setEditingTicker] = useState(null);
+      const [editPriceValue, setEditPriceValue] = useState('');
+
+      const formatCurrency = (val) => {
+        if (baseCurrency === 'KRW') {
+          return `₩ ${Math.round(val).toLocaleString()}`;
+        } else {
+          return `$ ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+      };
+
+      // [로직] 포트폴리오 다중 통화 환산 계산
+      const calculatePortfolio = () => {
+        const stockMap = {};
+        transactions.forEach((tx) => {
+          if (!stockMap[tx.ticker]) {
+            stockMap[tx.ticker] = { ticker: tx.ticker, sector: tx.sector, totalQuantity: 0, totalCostInBase: 0, originalCurrency: tx.currency };
+          }
+          stockMap[tx.ticker].totalQuantity += tx.quantity;
+          
+          let costInBase = tx.price * tx.quantity;
+          if (tx.currency === 'USD' && baseCurrency === 'KRW') {
+            costInBase = (tx.price * exchangeRate) * tx.quantity;
+          } else if (tx.currency === 'KRW' && baseCurrency === 'USD') {
+            costInBase = (tx.price / exchangeRate) * tx.quantity;
+          }
+          
+          stockMap[tx.ticker].totalCostInBase += costInBase;
+        });
+
+        const items = Object.values(stockMap).map((stock) => {
+          const averagePrice = stock.totalQuantity > 0 ? stock.totalCostInBase / stock.totalQuantity : 0;
+          
+          let storedCurrentPrice = currentPrices[stock.ticker];
+          if (storedCurrentPrice === undefined) {
+            const originalCost = transactions
+              .filter(t => t.ticker === stock.ticker)
+              .reduce((sum, t) => sum + (t.price * t.quantity), 0);
+            storedCurrentPrice = stock.totalQuantity > 0 ? originalCost / stock.totalQuantity : 0;
+          }
+
+          let currentPriceInBase = storedCurrentPrice;
+          if (stock.originalCurrency === 'USD' && baseCurrency === 'KRW') {
+            currentPriceInBase = storedCurrentPrice * exchangeRate;
+          } else if (stock.originalCurrency === 'KRW' && baseCurrency === 'USD') {
+            currentPriceInBase = storedCurrentPrice / exchangeRate;
+          }
+
+          const currentValue = stock.totalQuantity * currentPriceInBase;
+          const gainOrLoss = currentValue - stock.totalCostInBase;
+          const returnRate = stock.totalCostInBase > 0 ? (gainOrLoss / stock.totalCostInBase) * 100 : 0;
+
+          return {
+            ticker: stock.ticker,
+            sector: stock.sector,
+            totalQuantity: stock.totalQuantity,
+            averagePrice,
+            totalCost: stock.totalCostInBase,
+            currentPrice: currentPriceInBase,
+            currentValue,
+            gainOrLoss,
+            returnRate,
+            ratio: 0
+          };
+        });
+
+        const overallTotalCost = items.reduce((sum, item) => sum + item.totalCost, 0);
+        return items.map(item => ({
+          ...item,
+          ratio: overallTotalCost > 0 ? (item.totalCost / overallTotalCost) * 100 : 0
+        }));
+      };
+
+      const portfolioItems = calculatePortfolio();
+
+      const calculateSectors = () => {
+        const sectorMap = {};
+        let overallTotalCost = 0;
+
+        portfolioItems.forEach((item) => {
+          sectorMap[item.sector] = (sectorMap[item.sector] || 0) + item.totalCost;
+          overallTotalCost += item.totalCost;
+        });
+
+        return Object.entries(sectorMap).map(([sector, cost], idx) => ({
+          sector,
+          totalCost: cost,
+          ratio: overallTotalCost > 0 ? (cost / overallTotalCost) * 100 : 0,
+          color: SECTOR_COLORS[idx % SECTOR_COLORS.length]
+        })).sort((a, b) => b.totalCost - a.totalCost);
+      };
+
+      const sectorAllocations = calculateSectors();
+
+      const totalInvestment = portfolioItems.reduce((sum, item) => sum + item.totalCost, 0);
+      const totalEvaluation = portfolioItems.reduce((sum, item) => sum + item.currentValue, 0);
+      const overallGainOrLoss = totalEvaluation - totalInvestment;
+      const overallReturnRate = totalInvestment > 0 ? (overallGainOrLoss / totalInvestment) * 100 : 0;
+
+      const handleSavePrice = (ticker) => {
+        const val = Number(editPriceValue);
+        if (!isNaN(val) && val >= 0) {
+          const matchTx = transactions.find(t => t.ticker === ticker);
+          const originalCurrency = matchTx ? matchTx.currency : 'KRW';
+          
+          let originalPriceValue = val;
+          if (originalCurrency === 'USD' && baseCurrency === 'KRW') {
+            originalPriceValue = val / exchangeRate;
+          } else if (originalCurrency === 'KRW' && baseCurrency === 'USD') {
+            originalPriceValue = val * exchangeRate;
+          }
+          
+          onUpdateCurrentPrice(ticker, originalPriceValue);
+        }
+        setEditingTicker(null);
+      };
+
+      // 보정된 SVG 파이 차트 둘레 공식 적용
+      const r = 40;
+      const circumference = 2 * Math.PI * r;
+      let accumulatedPercentage = 0;
+
+      return (
+        <div className="space-y-6">
+          {/* 요약 카드 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="glass-card p-4 relative overflow-hidden">
+              <p className="text-2xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">총 매수 금액 (원금)</p>
+              <p className="text-xl font-black text-slate-800 dark:text-slate-100">{formatCurrency(totalInvestment)}</p>
+            </div>
+
+            <div className="glass-card p-4 relative overflow-hidden">
+              <p className="text-2xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">현재 평가 자산</p>
+              <p className="text-xl font-black text-slate-800 dark:text-slate-100">{formatCurrency(totalEvaluation)}</p>
+              <p className={`text-3xs font-extrabold mt-1 ${overallGainOrLoss >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {overallGainOrLoss >= 0 ? '+' : ''}{formatCurrency(overallGainOrLoss)} ({overallReturnRate.toFixed(2)}%)
+              </p>
+            </div>
+
+            <div className="glass-card p-4 relative overflow-hidden">
+              <p className="text-2xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">총 누적 수익률</p>
+              <p className={`text-2xl font-black flex items-baseline ${overallReturnRate >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {overallReturnRate >= 0 ? '+' : ''}{overallReturnRate.toFixed(2)}
+                <span className="text-xs font-semibold ml-0.5">%</span>
+              </p>
+            </div>
+          </div>
+
+          {/* 섹터 비중 대시보드 */}
+          {sectorAllocations.length > 0 && (
+            <div className="glass-card p-5 flex flex-col sm:flex-row items-center gap-6">
+              <div className="relative w-32 h-32 shrink-0 flex items-center justify-center bg-slate-100/50 dark:bg-slate-950/20 rounded-full p-1.5 border border-slate-200/40 dark:border-slate-800/40">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r={r} fill="transparent" stroke="currentColor" className="text-slate-200 dark:text-slate-850" strokeWidth="12" />
+                  {sectorAllocations.map((sa) => {
+                    const dashShare = (sa.ratio / 100) * circumference;
+                    const strokeDasharray = `${dashShare} ${circumference - dashShare}`;
+                    const strokeDashoffset = -((accumulatedPercentage / 100) * circumference);
+                    accumulatedPercentage += sa.ratio;
+                    return (
+                      <circle
+                        key={sa.sector}
+                        cx="50"
+                        cy="50"
+                        r={r}
+                        fill="transparent"
+                        stroke={sa.color}
+                        strokeWidth="12"
+                        strokeDasharray={strokeDasharray}
+                        strokeDashoffset={strokeDashoffset}
+                      />
+                    );
+                  })}
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="text-4xs text-slate-500 font-bold uppercase">섹터 다변화</span>
+                  <span className="text-2xs font-extrabold text-cyan-500 dark:text-cyan-400">{sectorAllocations.length}개 분야</span>
+                </div>
+              </div>
+
+              <div className="flex-1 w-full space-y-3">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-300 flex items-center gap-1">
+                  <Icon name="pie" className="w-3.5 h-3.5 text-cyan-500" />
+                  섹터 포트폴리오 비중
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-2xs">
+                  {sectorAllocations.map((sa) => (
+                    <div key={sa.sector} className="space-y-1">
+                      <div className="flex justify-between text-slate-500 dark:text-slate-400 font-semibold">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: sa.color }} />
+                          {sa.sector}
+                        </span>
+                        <span className="font-bold text-slate-800 dark:text-slate-250">{sa.ratio.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-slate-200 dark:bg-slate-900 rounded-full h-1 overflow-hidden">
+                        <div className="h-full rounded-full animate-pulse" style={{ width: `${sa.ratio}%`, backgroundColor: sa.color }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 탭 테이블 */}
+          <div className="glass-card overflow-hidden">
+            <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/30">
+              <button
+                onClick={() => setActiveTab('portfolio')}
+                className={`flex items-center gap-1.5 px-4 py-3.5 text-xs font-bold border-b-2 transition-all ${
+                  activeTab === 'portfolio' ? 'text-cyan-600 dark:text-cyan-400 border-cyan-500 bg-white dark:bg-slate-900/50' : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-200'
+                }`}
+              >
+                <Icon name="file" className="w-3.5 h-3.5" />
+                종목별 현황
+              </button>
+              <button
+                onClick={() => setActiveTab('transactions')}
+                className={`flex items-center gap-1.5 px-4 py-3.5 text-xs font-bold border-b-2 transition-all ${
+                  activeTab === 'transactions' ? 'text-cyan-600 dark:text-cyan-400 border-cyan-500 bg-white dark:bg-slate-900/50' : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-200'
+                }`}
+              >
+                <Icon name="list" className="w-3.5 h-3.5" />
+                상세 매입 이력 ({transactions.length}건)
+              </button>
+            </div>
+
+            <div className="p-3 overflow-x-auto">
+              {transactions.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-xs">등록된 주식 정보가 없습니다.</div>
+              ) : activeTab === 'portfolio' ? (
+                <table className="w-full border-collapse text-left min-w-[650px] text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-450 dark:text-slate-500 font-semibold select-none">
+                      <th className="py-2.5 px-2">종목명</th>
+                      <th className="py-2.5 px-2">섹터</th>
+                      <th className="py-2.5 px-2 text-right">보유량</th>
+                      <th className="py-2.5 px-2 text-right">평단가</th>
+                      <th className="py-2.5 px-2 text-right">투자원금</th>
+                      <th className="py-2.5 px-2 text-right text-cyan-550 dark:text-cyan-400">현재가(수정)</th>
+                      <th className="py-2.5 px-2 text-right">평가금액</th>
+                      <th className="py-2.5 px-2 text-right">평가손익</th>
+                      <th className="py-2.5 px-2 text-right">수익률</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-slate-600 dark:text-slate-300">
+                    {portfolioItems.map((item) => (
+                      <tr key={item.ticker} className="hover:bg-slate-100/20 dark:hover:bg-slate-800/10 transition-colors">
+                        <td className="py-2.5 px-2 font-bold text-slate-800 dark:text-slate-100">{item.ticker}</td>
+                        <td className="py-2.5 px-2"><span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-slate-400 text-4xs font-bold rounded">{item.sector}</span></td>
+                        <td className="py-2.5 px-2 text-right font-medium">{item.totalQuantity}주</td>
+                        <td className="py-2.5 px-2 text-right">{formatCurrency(item.averagePrice)}</td>
+                        <td className="py-2.5 px-2 text-right font-semibold">{formatCurrency(item.totalCost)}</td>
+                        <td className="py-2.5 px-2 text-right">
+                          {editingTicker === item.ticker ? (
+                            <div className="flex justify-end gap-1 items-center">
+                              <input
+                                type="number"
+                                step="any"
+                                value={editPriceValue}
+                                onChange={(e) => setEditPriceValue(e.target.value)}
+                                className="bg-slate-100 dark:bg-slate-950 text-right w-20 border border-cyan-550 dark:border-cyan-500 rounded px-1.5 py-0.5 text-slate-800 dark:text-slate-100 font-bold outline-none text-3xs"
+                                autoFocus
+                              />
+                              <button onClick={() => handleSavePrice(item.ticker)} className="p-0.5 bg-cyan-500 rounded text-slate-950">
+                                <Icon name="check" className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => { setEditingTicker(item.ticker); setEditPriceValue(item.currentPrice.toFixed(baseCurrency === 'KRW' ? 0 : 2)); }}
+                              className="text-right text-slate-700 dark:text-slate-200 border-b border-dashed border-slate-350 dark:border-slate-700 hover:text-cyan-500"
+                            >
+                              {formatCurrency(item.currentPrice)}
+                            </button>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-bold text-slate-800 dark:text-slate-100">{formatCurrency(item.currentValue)}</td>
+                        <td className={`py-2.5 px-2 text-right font-bold ${item.gainOrLoss >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          {item.gainOrLoss >= 0 ? '+' : ''}{formatCurrency(item.gainOrLoss)}
+                        </td>
+                        <td className={`py-2.5 px-2 text-right font-black ${item.returnRate >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          {item.returnRate >= 0 ? '+' : ''}{item.returnRate.toFixed(2)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <table className="w-full border-collapse text-left min-w-[550px] text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-450 dark:text-slate-500 select-none">
+                      <th className="py-2.5 px-2">날짜</th>
+                      <th className="py-2.5 px-2">종목명</th>
+                      <th className="py-2.5 px-2">섹터</th>
+                      <th className="py-2.5 px-2 text-right">단가</th>
+                      <th className="py-2.5 px-2 text-right">수량</th>
+                      <th className="py-2.5 px-2 text-right">총액</th>
+                      <th className="py-2.5 px-2 text-center w-16">삭제</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-slate-650 dark:text-slate-400">
+                    {[...transactions].sort((a,b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime()).map((tx) => (
+                      <tr key={tx.id} className="hover:bg-slate-100/20 dark:hover:bg-slate-800/10 transition-colors">
+                        <td className="py-2.5 px-2 text-slate-500 font-sans">{tx.purchaseDate}</td>
+                        <td className="py-2.5 px-2 font-bold text-slate-800 dark:text-slate-100">{tx.ticker}</td>
+                        <td className="py-2.5 px-2"><span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-slate-400 rounded text-4xs font-bold">{tx.sector}</span></td>
+                        <td className="py-2.5 px-2 text-right">{tx.currency === 'KRW' ? `₩ ${tx.price.toLocaleString()}` : `$ ${tx.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</td>
+                        <td className="py-2.5 px-2 text-right">{tx.quantity}주</td>
+                        <td className="py-2.5 px-2 text-right font-bold text-slate-800 dark:text-slate-200">
+                          {tx.currency === 'KRW' ? `₩ ${(tx.price*tx.quantity).toLocaleString()}` : `$ ${(tx.price*tx.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                        </td>
+                        <td className="py-2.5 px-2 text-center">
+                          <button onClick={() => onDeleteTransaction(tx.id)} className="p-1 bg-rose-500/10 border border-rose-500/20 rounded hover:bg-rose-500 text-rose-550 dark:text-rose-450 hover:text-white transition-colors">
+                            <Icon name="trash" className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 3. StockAdvisorChat Component (AI 대화 및 진단)
+    // ==========================================
+    function StockAdvisorChat({ transactions, currentPrices, baseCurrency, exchangeRate, apiKey, onApiKeyChange, messages, onAddMessage, onClearMessages }) {
+      const [inputMessage, setInputMessage] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const [isEditingKey, setIsEditingKey] = useState(!apiKey);
+      const [tempApiKey, setTempApiKey] = useState(apiKey);
+      const messagesEndRef = useRef(null);
+
+      const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      useEffect(() => {
+        scrollToBottom();
+      }, [messages, isLoading]);
+
+      // 포트폴리오 스냅샷 생성 (글로벌 통화 동기화)
+      const generatePortfolioSnapshot = () => {
+        if (transactions.length === 0) return "등록된 포트폴리오가 없습니다.";
+        
+        const stockMap = {};
+        transactions.forEach((tx) => {
+          if (!stockMap[tx.ticker]) stockMap[tx.ticker] = { ticker: tx.ticker, sector: tx.sector, totalQuantity: 0, totalCostInBase: 0, originalCurrency: tx.currency };
+          stockMap[tx.ticker].totalQuantity += tx.quantity;
+          
+          let costInBase = tx.price * tx.quantity;
+          if (tx.currency === 'USD' && baseCurrency === 'KRW') {
+            costInBase = (tx.price * exchangeRate) * tx.quantity;
+          } else if (tx.currency === 'KRW' && baseCurrency === 'USD') {
+            costInBase = (tx.price / exchangeRate) * tx.quantity;
+          }
+          stockMap[tx.ticker].totalCostInBase += costInBase;
+        });
+
+        const items = Object.values(stockMap).map((stock) => {
+          const averagePrice = stock.totalQuantity > 0 ? stock.totalCostInBase / stock.totalQuantity : 0;
+          
+          let storedCurrentPrice = currentPrices[stock.ticker];
+          if (storedCurrentPrice === undefined) {
+            const originalCost = transactions.filter(t => t.ticker === stock.ticker).reduce((sum, t) => sum + (t.price * t.quantity), 0);
+            storedCurrentPrice = stock.totalQuantity > 0 ? originalCost / stock.totalQuantity : 0;
+          }
+
+          let currentPriceInBase = storedCurrentPrice;
+          if (stock.originalCurrency === 'USD' && baseCurrency === 'KRW') {
+            currentPriceInBase = storedCurrentPrice * exchangeRate;
+          } else if (stock.originalCurrency === 'KRW' && baseCurrency === 'USD') {
+            currentPriceInBase = storedCurrentPrice / exchangeRate;
+          }
+
+          const currentValue = stock.totalQuantity * currentPriceInBase;
+          const gainOrLoss = currentValue - stock.totalCostInBase;
+          const returnRate = stock.totalCostInBase > 0 ? (gainOrLoss / stock.totalCostInBase) * 100 : 0;
+          return { ...stock, averagePrice, currentPrice: currentPriceInBase, currentValue, gainOrLoss, returnRate };
+        });
+
+        const totalInvestment = items.reduce((sum, item) => sum + item.totalCostInBase, 0);
+        const totalEvaluation = items.reduce((sum, item) => sum + item.currentValue, 0);
+        const overallReturn = totalInvestment > 0 ? ((totalEvaluation - totalInvestment) / totalInvestment) * 100 : 0;
+
+        const curSym = baseCurrency === 'KRW' ? '₩' : '$';
+
+        const sectors = {};
+        items.forEach(item => { sectors[item.sector] = (sectors[item.sector] || 0) + item.totalCostInBase; });
+        const sectorStr = Object.entries(sectors).map(([sec, cost]) => `- ${sec}: ${((cost/totalInvestment)*100).toFixed(1)}% (${curSym}${cost.toLocaleString(undefined, { maximumFractionDigits: 0 })})`).join('\n');
+        
+        const itemStr = items.map(i => `* [${i.ticker}] (${i.sector}) - 수량: ${i.totalQuantity}주 / 평단: ${curSym}${i.averagePrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} / 현재가: ${curSym}${i.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 1 })} / 투자원금: ${curSym}${i.totalCostInBase.toLocaleString(undefined, { maximumFractionDigits: 0 })} / 수익률: ${i.returnRate.toFixed(2)}%`).join('\n');
+
+        return `
+[포트폴리오 스냅샷 (기준통화: ${baseCurrency})]
+- 총 투자 원금: ${curSym}${totalInvestment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+- 현재 평가 자산: ${curSym}${totalEvaluation.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+- 전체 누적 수익률: ${overallReturn.toFixed(2)}%
+
+[섹터 비중 현황]
+${sectorStr}
+
+[보유 개별 자산 내역]
+${itemStr}
+        `.trim();
+      };
+
+      const handleSaveApiKey = () => {
+        if (tempApiKey.trim()) {
+          onApiKeyChange(tempApiKey.trim());
+          setIsEditingKey(false);
+        }
+      };
+
+      // 브라우저 direct fetch 연동 (Gemini 2.5 systemInstruction 및 멀티턴 적용)
+      const handleSendMessage = async (customPrompt) => {
+        const text = customPrompt || inputMessage;
+        if (!text.trim()) return;
+
+        if (!apiKey) {
+          alert("먼저 구글 Gemini API Key를 등록해주세요.");
+          setIsEditingKey(true);
+          return;
+        }
+
+        onAddMessage({ role: 'user', content: text });
+        if (!customPrompt) setInputMessage('');
+        setIsLoading(true);
+
+        try {
+          const snapshot = generatePortfolioSnapshot();
+          const systemPrompt = `
+너는 세계 최고 수준의 헤지펀드 매니저 출신의 냉철하고 전문적인 주식 포트폴리오 전문 자문가이다.
+아래 사용자의 포트폴리오 스냅샷 정보를 분석하고, 질문에 대한 답변을 작성하라.
+1. 한국어 존댓말을 쓰되 매우 단호하고 예리하며 팩트에 기인해 조언할 것.
+2. 특정 분야에 쏠린 비중의 리스크, 리밸런싱 아이디어를 적극 조언할 것.
+3. 마크다운 기호를 적극 활용하여 읽기 쉽게 줄바꿈 및 섹션을 제공할 것.
+
+[현재 사용자 주식 가계부 포트폴리오 실시간 스냅샷]
+${snapshot}
+          `;
+
+          // 히스토리 멀티턴 구성
+          const contentsArray = [];
+          const historySlice = messages.slice(-8);
+          
+          historySlice.forEach((m) => {
+            contentsArray.push({
+              role: m.role === 'user' ? 'user' : 'model',
+              parts: [{ text: m.content }]
+            });
+          });
+
+          // 현재 유저 메시지 주입
+          contentsArray.push({
+            role: 'user',
+            parts: [{ text: text }]
+          });
+
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: contentsArray,
+              systemInstruction: {
+                parts: [{ text: systemPrompt }]
+              }
+            })
+          });
+
+          const data = await response.json();
+          if (data.candidates && data.candidates[0].content.parts[0].text) {
+            onAddMessage({
+              role: 'model',
+              content: data.candidates[0].content.parts[0].text
+            });
+          } else {
+            throw new Error(data.error?.message || "API 응답에 에러가 존재합니다.");
+          }
+
+        } catch (error) {
+          console.error("Gemini API Error:", error);
+          onAddMessage({
+            role: 'model',
+            content: `❌ **API 호출에 실패했습니다.**\n\n에러 내용: ${error.message || '네트워크 문제'}\n\n*API 키가 올바른지, 사용량 제한에 도달했는지 확인해주세요.*`
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const handleQuickDiagnose = () => {
+        if (transactions.length === 0) {
+          alert("주식을 최소 1개 이상 가계부에 등록하고 분석을 요청해 주세요.");
+          return;
+        }
+        handleSendMessage("현재 내 주식 포트폴리오의 자산 쏠림 리스크와 종목별 기대수익률 대비 안정성을 냉철하고 엄격하게 진단해줘.");
+      };
+
+      const parseMarkdown = (text) => {
+        return text.split('\n').map((line, idx) => {
+          if (line.startsWith('### ')) return <h4 key={idx} className="text-xs font-bold text-cyan-600 dark:text-cyan-400 mt-2.5 mb-1">{line.slice(4)}</h4>;
+          if (line.startsWith('## ')) return <h3 key={idx} className="text-xs font-bold text-cyan-700 dark:text-cyan-300 mt-3.5 mb-1.5 border-b border-slate-200 dark:border-slate-800 pb-0.5">{line.slice(3)}</h3>;
+          if (line.startsWith('* ') || line.startsWith('- ')) {
+            return <li key={idx} className="ml-3 list-disc text-3xs text-slate-600 dark:text-slate-350 my-0.5 leading-relaxed">{renderBoldText(line.slice(2))}</li>;
+          }
+          if (line.startsWith('> ')) {
+            return <blockquote key={idx} className="border-l-2 border-cyan-500 bg-slate-100 dark:bg-slate-950/60 px-2 py-1 my-1.5 text-3xs text-slate-500 dark:text-slate-400 italic rounded-r">{renderBoldText(line.slice(2))}</blockquote>;
+          }
+          return <p key={idx} className="text-3xs text-slate-600 dark:text-slate-300 my-0.5 leading-relaxed min-h-[0.8rem]">{renderBoldText(line)}</p>;
+        });
+      };
+
+      const renderBoldText = (text) => {
+        const parts = text.split(/\*\*(.*?)\*\*/g);
+        return parts.map((part, i) => i % 2 === 1 ? <strong key={i} className="text-cyan-600 dark:text-cyan-400 font-bold">{part}</strong> : part);
+      };
+
+      return (
+        <div className="glass-card flex flex-col h-[650px] overflow-hidden">
+          {/* 챗 헤더 */}
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-550/5 dark:bg-slate-900/40 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Icon name="sparkles" className="w-4 h-4 text-cyan-500 dark:text-cyan-400 animate-pulse" />
+                <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">Gemini 2.5 Flash 투자 전문가 AI</h3>
+              </div>
+              <button
+                onClick={() => setIsEditingKey(!isEditingKey)}
+                className={`text-4xs px-2 py-1 rounded font-bold border transition-colors ${
+                  apiKey ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 animate-pulse'
+                }`}
+              >
+                {apiKey ? 'API KEY 등록됨' : 'API KEY 설정'}
+              </button>
+            </div>
+
+            {isEditingKey && (
+              <div className="p-2.5 bg-slate-100 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 space-y-2 animate-fadeIn">
+                <div className="flex justify-between text-4xs text-slate-500 font-bold">
+                  <span>Google Gemini API Key 입력</span>
+                  <a href="https://aistudio.google.com/" target="_blank" className="text-cyan-500 dark:text-cyan-400 hover:underline">무료 키 얻기 →</a>
+                </div>
+                <div className="flex gap-1.5">
+                  <input
+                    type="password"
+                    value={tempApiKey}
+                    onChange={(e) => setTempApiKey(e.target.value)}
+                    placeholder="API Key 입력"
+                    className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded px-2.5 py-1 text-3xs outline-none"
+                  />
+                  <button onClick={handleSaveApiKey} className="btn-primary py-1 px-3 rounded text-3xs font-bold">저장</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 대화 박스 */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/10 dark:bg-slate-950/20">
+            {messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center p-4 space-y-3">
+                <div className="p-3 bg-cyan-500/10 dark:bg-cyan-950/20 rounded-full border border-cyan-500/10">
+                  <Icon name="sparkles" className="w-6 h-6 text-cyan-500" />
+                </div>
+                <div>
+                  <h4 className="text-2xs font-extrabold text-slate-700 dark:text-slate-200">인공지능 자문관 가동 가능</h4>
+                  <p className="text-3xs text-slate-500 max-w-[200px] mt-1 leading-normal font-medium">
+                    원화/달러 환산된 자산 비중 진단 및 쏠림 리스크를 정교하게 분석합니다.
+                  </p>
+                </div>
+                <button
+                  onClick={handleQuickDiagnose}
+                  className="btn-primary text-3xs py-1.5 px-4 rounded-lg font-bold flex items-center gap-1"
+                >
+                  <Icon name="shield" className="w-3.5 h-3.5" />
+                  포트폴리오 원클릭 종합 분석
+                </button>
+              </div>
+            ) : (
+              messages.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] rounded-xl p-2.5 ${msg.role === 'user' ? 'bg-gradient-to-br from-cyan-600 to-indigo-700 text-white rounded-tr-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none shadow'}`}>
+                    {msg.role === 'model' ? <div className="space-y-0.5">{parseMarkdown(msg.content)}</div> : <p className="text-3xs leading-relaxed whitespace-pre-wrap">{msg.content}</p>}
+                    <div className={`text-4xs mt-1 text-right ${msg.role === 'user' ? 'text-cyan-200/85' : 'text-slate-400 dark:text-slate-500'}`}>
+                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl rounded-tl-none p-3 shadow-md">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Icon name="sparkles" className="w-3 h-3 text-cyan-500 animate-spin" />
+                    <span className="text-4xs text-cyan-500 font-bold uppercase tracking-wider">포트폴리오 분석 중...</span>
+                  </div>
+                  <div className="dot-typing">
+                    <span></span><span></span><span></span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* 인풋 영역 */}
+          <div className="p-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 space-y-1.5">
+            <div className="flex justify-between items-center text-4xs text-slate-400 dark:text-slate-500 px-1 font-bold">
+              <span>* 질문 시 기준통화 환산 포트폴리오 스냅샷이 전달됩니다.</span>
+              {messages.length > 0 && (
+                <button onClick={onClearMessages} className="text-rose-500 hover:text-rose-600 flex items-center gap-0.5">
+                  <Icon name="refresh" className="w-2.5 h-2.5" /> 초기화
+                </button>
+              )}
+            </div>
+            
+            <div className="flex gap-1.5">
+              <button
+                onClick={handleQuickDiagnose}
+                disabled={isLoading || transactions.length === 0}
+                className="btn-secondary px-2.5 flex items-center justify-center text-cyan-500 bg-white dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                title="포트폴리오 바로 진단"
+              >
+                <Icon name="shield" className="w-3.5 h-3.5" />
+              </button>
+
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !isLoading) handleSendMessage(); }}
+                placeholder={apiKey ? "자문관에게 질문해 보세요..." : "상단에 API Key를 등록해주세요."}
+                disabled={isLoading || !apiKey}
+                className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-3xs outline-none focus:border-cyan-500 placeholder:text-slate-400 dark:placeholder:text-slate-700 disabled:opacity-50"
+              />
+              <button
+                onClick={() => handleSendMessage()}
+                disabled={isLoading || !apiKey || !inputMessage.trim()}
+                className="btn-primary px-3 rounded-lg flex items-center justify-center shrink-0"
+              >
+                <Icon name="send" className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 4. Main App Component (상태 취합 & 레이아웃)
+    // ==========================================
+    function App() {
+      const [transactions, setTransactions] = useState(() => {
+        const saved = localStorage.getItem('stock_transactions');
+        return saved ? JSON.parse(saved) : INITIAL_DEMO_TRANSACTIONS;
+      });
+
+      const [currentPrices, setCurrentPrices] = useState(() => {
+        const saved = localStorage.getItem('stock_current_prices');
+        return saved ? JSON.parse(saved) : INITIAL_DEMO_PRICES;
+      });
+
+      const [baseCurrency, setBaseCurrency] = useState(() => {
+        return localStorage.getItem('stock_base_currency') || 'KRW';
+      });
+
+      const [exchangeRate, setExchangeRate] = useState(() => {
+        const saved = localStorage.getItem('stock_exchange_rate');
+        return saved ? Number(saved) : 1380;
+      });
+
+      const [showRateModal, setShowRateModal] = useState(false);
+      const [tempRate, setTempRate] = useState(exchangeRate.toString());
+
+      const [theme, setTheme] = useState(() => {
+        return localStorage.getItem('stock_theme') || 'dark';
+      });
+
+      const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+      
+      const [chatMessages, setChatMessages] = useState(() => {
+        const saved = localStorage.getItem('chat_messages');
+        return saved ? JSON.parse(saved) : [];
+      });
+
+      useEffect(() => { localStorage.setItem('stock_transactions', JSON.stringify(transactions)); }, [transactions]);
+      useEffect(() => { localStorage.setItem('stock_current_prices', JSON.stringify(currentPrices)); }, [currentPrices]);
+      useEffect(() => { localStorage.setItem('stock_base_currency', baseCurrency); }, [baseCurrency]);
+      useEffect(() => { localStorage.setItem('stock_exchange_rate', exchangeRate.toString()); }, [exchangeRate]);
+      
+      useEffect(() => {
+        localStorage.setItem('stock_theme', theme);
+        const root = window.document.documentElement;
+        if (theme === 'dark') root.classList.add('dark');
+        else root.classList.remove('dark');
+      }, [theme]);
+
+      useEffect(() => { localStorage.setItem('gemini_api_key', apiKey); }, [apiKey]);
+      useEffect(() => { localStorage.setItem('chat_messages', JSON.stringify(chatMessages)); }, [chatMessages]);
+
+      const handleAddTransaction = (newTx) => {
+        const txWithId = { ...newTx, id: `tx-${Date.now()}` };
+        setTransactions(prev => [txWithId, ...prev]);
+        if (currentPrices[newTx.ticker] === undefined) {
+          setCurrentPrices(prev => ({ ...prev, [newTx.ticker]: newTx.price }));
+        }
+      };
+
+      const handleDeleteTransaction = (id) => {
+        if (confirm("삭제하시겠습니까?")) {
+          setTransactions(prev => prev.filter(t => t.id !== id));
+        }
+      };
+
+      const handleUpdateCurrentPrice = (ticker, price) => {
+        setCurrentPrices(prev => ({ ...prev, [ticker]: price }));
+      };
+
+      const handleAddChatMessage = (newMsg) => {
+        const msg = { ...newMsg, id: `msg-${Date.now()}`, timestamp: new Date().toISOString() };
+        setChatMessages(prev => [...prev, msg]);
+      };
+
+      const handleClearMessages = () => {
+        if (confirm("대화 내용을 초기화하시겠습니까?")) setChatMessages([]);
+      };
+
+      const handleResetDemo = () => {
+        if (confirm("데이터를 데모 데이터로 초기화하시겠습니까? (커스텀 데이터는 유실됩니다)")) {
+          setTransactions(INITIAL_DEMO_TRANSACTIONS);
+          setCurrentPrices(INITIAL_DEMO_PRICES);
+          setExchangeRate(1380);
+          setTempRate("1380");
+          setChatMessages([]);
+        }
+      };
+
+      const handleSaveRate = () => {
+        const parsed = Number(tempRate);
+        if (!isNaN(parsed) && parsed > 0) {
+          setExchangeRate(parsed);
+          setShowRateModal(false);
+        } else {
+          alert("0보다 큰 숫자를 기입해주세요.");
+        }
+      };
+
+      // [백오피스] JSON 백업 다운로드
+      const handleExportData = () => {
+        const backup = {
+          version: "1.0",
+          timestamp: new Date().toISOString(),
+          transactions,
+          currentPrices,
+          exchangeRate
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+        const anchor = document.createElement('a');
+        anchor.setAttribute("href", dataStr);
+        anchor.setAttribute("download", `주식가계부_백업_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+      };
+
+      // [백오피스] JSON 백업 업로드
+      const handleImportData = (e) => {
+        const reader = new FileReader();
+        const file = e.target.files[0];
+        if (!file) return;
+
+        reader.onload = (event) => {
+          try {
+            const parsed = JSON.parse(event.target.result);
+            if (Array.isArray(parsed.transactions) && typeof parsed.currentPrices === 'object') {
+              if (confirm("백업 파일로 가계부를 덮어씌우시겠습니까?")) {
+                setTransactions(parsed.transactions);
+                setCurrentPrices(parsed.currentPrices);
+                if (parsed.exchangeRate) {
+                  setExchangeRate(parsed.exchangeRate);
+                  setTempRate(parsed.exchangeRate.toString());
+                }
+                alert("성공적으로 복구되었습니다!");
+              }
+            } else {
+              alert("적합한 백업 데이터 형식이 아닙니다.");
+            }
+          } catch (err) {
+            alert("파일을 복구하는 중 에러가 발생했습니다.");
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+      };
+
+      return (
+        <div className="min-h-screen pb-12 flex flex-col transition-colors duration-300">
+          {/* 헤더 */}
+          <header className="border-b border-slate-200 dark:border-slate-900 bg-white/80 dark:bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg">
+                <Icon name="trendingUp" className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-sm font-extrabold text-gradient-shine tracking-wide">AI 스마트 주식 가계부 (무설치 버전)</h1>
+                <p className="text-4xs text-slate-500 dark:text-slate-600 font-medium">하이브리드 환산 엔진 • 백업/복구 포트 • 듀얼 테마 지원</p>
+              </div>
+            </div>
+
+            {/* 백오피스 컨트롤 패널 */}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {/* 테마 스위치 */}
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+              >
+                {theme === 'dark' ? <Icon name="sun" className="w-3.5 h-3.5 text-amber-400" /> : <Icon name="moon" className="w-3.5 h-3.5 text-indigo-650" />}
+              </button>
+
+              {/* 환율 세팅 */}
+              <button
+                onClick={() => { setTempRate(exchangeRate.toString()); setShowRateModal(true); }}
+                className="flex items-center gap-1 text-4xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2.5 py-1.5 rounded-lg"
+              >
+                <Icon name="settings" className="w-3 h-3 text-cyan-500" />
+                <span>₩{exchangeRate.toLocaleString()}</span>
+              </button>
+
+              {/* 기준화폐 토글 */}
+              <div className="flex bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-0.5 rounded-lg">
+                <button
+                  onClick={() => setBaseCurrency('KRW')}
+                  className={`text-4xs font-bold px-2.5 py-1 rounded-md transition-all ${
+                    baseCurrency === 'KRW' ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white shadow' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  KRW (₩)
+                </button>
+                <button
+                  onClick={() => setBaseCurrency('USD')}
+                  className={`text-4xs font-bold px-2.5 py-1 rounded-md transition-all ${
+                    baseCurrency === 'USD' ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white shadow' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  USD ($)
+                </button>
+              </div>
+
+              {/* 다운로드 백업 */}
+              <button
+                onClick={handleExportData}
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400"
+                title="데이터 파일 백업"
+              >
+                <Icon name="download" className="w-3.5 h-3.5" />
+              </button>
+
+              {/* 임포트 복원 */}
+              <label
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 cursor-pointer"
+                title="데이터 복원"
+              >
+                <Icon name="upload" className="w-3.5 h-3.5" />
+                <input type="file" accept=".json" onChange={handleImportData} className="hidden" />
+              </label>
+
+              {/* 데모 리셋 */}
+              <button
+                onClick={handleResetDemo}
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
+                title="데모 데이터 리셋"
+              >
+                <Icon name="refresh" className="w-3.5 h-3.5 text-amber-500" />
+              </button>
+            </div>
+          </header>
+
+          {/* 환율 세팅 모달 */}
+          {showRateModal && (
+            <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="glass-card p-5 max-w-xs w-full space-y-4 animate-fadeIn">
+                <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <Icon name="dollar" className="w-4 h-4 text-cyan-400" />
+                  <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">기준 적용 환율 조정</h3>
+                </div>
+                <div>
+                  <label className="block text-4xs font-bold text-slate-500 mb-1">1 달러(USD) 당 원화(KRW) 환산 가치</label>
+                  <input
+                    type="number"
+                    value={tempRate}
+                    onChange={(e) => setTempRate(e.target.value)}
+                    className="form-input text-xs font-bold"
+                  />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <button onClick={() => setShowRateModal(false)} className="btn-secondary text-4xs px-3 py-1.5">취소</button>
+                  <button onClick={handleSaveRate} className="btn-primary text-4xs px-3 py-1.5">적용</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 메인 */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 mt-5">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+              <div className="lg:col-span-7 space-y-5">
+                <StockForm onAddTransaction={handleAddTransaction} />
+                <PortfolioTable
+                  transactions={transactions}
+                  currentPrices={currentPrices}
+                  baseCurrency={baseCurrency}
+                  exchangeRate={exchangeRate}
+                  onDeleteTransaction={handleDeleteTransaction}
+                  onUpdateCurrentPrice={handleUpdateCurrentPrice}
+                />
+              </div>
+              <div className="lg:col-span-5">
+                <StockAdvisorChat
+                  transactions={transactions}
+                  currentPrices={currentPrices}
+                  baseCurrency={baseCurrency}
+                  exchangeRate={exchangeRate}
+                  apiKey={apiKey}
+                  onApiKeyChange={setApiKey}
+                  messages={chatMessages}
+                  onAddMessage={handleAddChatMessage}
+                  onClearMessages={handleClearMessages}
+                />
+              </div>
+            </div>
+          </main>
+
+          <footer className="mt-8 text-center text-4xs text-slate-500 py-4 border-t border-slate-200 dark:border-slate-900">
+            로컬 단일 파일 독립형 SPA 구조 • React 18 & Google Gemini 2.5 Flash
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
